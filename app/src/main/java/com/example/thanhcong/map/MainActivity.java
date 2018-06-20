@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMyLocationChange(Location location) {
         CameraUpdate center =CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(),location.getLongitude()));
-        CameraUpdate zoom =CameraUpdateFactory.zoomTo(11);
+        CameraUpdate zoom =CameraUpdateFactory.zoomTo(14);
         mMap.clear();
         mMap.moveCamera(center);
         mMap.animateCamera(zoom);
@@ -139,9 +139,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         try {
             Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                             .build(this);
-          //  Animation animator = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.hide_bar_search);
-          //  cardview.setAnimation(animator);
             startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+            return;
         } catch (GooglePlayServicesRepairableException e) {
             // TODO: Handle the error.
         } catch (GooglePlayServicesNotAvailableException e) {
