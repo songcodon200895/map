@@ -33,6 +33,7 @@ import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
@@ -130,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+
     //Place selection
     @Override
     public void onPlaceSelected(Place place) {
@@ -137,8 +139,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         try {
             Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                             .build(this);
-            Animation animator = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.hide_bar_search);
-            cardview.setAnimation(animator);
+          //  Animation animator = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.hide_bar_search);
+          //  cardview.setAnimation(animator);
             startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
         } catch (GooglePlayServicesRepairableException e) {
             // TODO: Handle the error.
