@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onPlaceSelected(Place place) {
         Log.e("place",place.getName().toString());
         try {
-            Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+            Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                             .build(this);
             Animation animator = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.hide_bar_search);
             cardview.setAnimation(animator);
