@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -42,9 +43,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     SupportMapFragment supportMapFragment,f1,f2;
     Location first_location=null;
-    CardView cardview;
+    CardView viewcontainer;
     View buttonposition;
-    Button btn_search_line;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,19 +54,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addEvents() {
-        btn_search_line.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent =new Intent(getApplicationContext(),Main2Activity.class);
-                startActivity(intent);
-            }
-        });
      placeAutocompleteFragment.setOnPlaceSelectedListener(this);
     }
 
     private void addControlls() {
-        btn_search_line=findViewById(R.id.btn_search_line);
-        cardview=findViewById(R.id.cardview);
+        viewcontainer=findViewById(R.id.view_container);
         supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.maps);
         placeAutocompleteFragment= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         buttonposition=supportMapFragment.getView();
@@ -150,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.clear();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
         mMap.addMarker(markerOptions);
+        viewcontainer.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,100));
     }
 
     @Override
@@ -176,6 +169,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapClick(LatLng latLng) {
-        
+
     }
 }
