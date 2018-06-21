@@ -1,4 +1,4 @@
-package com.example.thanhcong.map;
+package com.example.thanhcong.map.Activity;
 
 import android.Manifest;
 import android.content.Intent;
@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.example.thanhcong.map.R;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
