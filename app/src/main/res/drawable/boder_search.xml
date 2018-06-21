@@ -3,7 +3,15 @@
 <item>
 <shape>
     <corners
-        android:radius="8dp"
+        android:bottomLeftRadius="10dp"
+        android:topLeftRadius="10dp"
+        android:radius="10dp"
+        />
+    <gradient
+        android:gradientRadius="10dp"
+        />
+    <solid
+        android:color="#87e23939"
         />
 </shape>
 </item>

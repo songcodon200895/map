@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Location first_location=null;
     CardView cardview;
     View buttonposition;
+    Button btn_search_line;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,10 +54,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addEvents() {
+        btn_search_line.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent =new Intent(getApplicationContext(),Main2Activity.class);
+                startActivity(intent);
+            }
+        });
      placeAutocompleteFragment.setOnPlaceSelectedListener(this);
     }
 
     private void addControlls() {
+        btn_search_line=findViewById(R.id.btn_search_line);
         cardview=findViewById(R.id.cardview);
         supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.maps);
         placeAutocompleteFragment= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
