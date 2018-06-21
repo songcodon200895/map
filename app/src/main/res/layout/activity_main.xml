@@ -23,11 +23,15 @@
             android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
             />
     </android.support.v7.widget.CardView>
-
+    <Button
+        android:text="Tìm đường"
+        android:id="@+id/btn_search_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
     <fragment
         android:id="@+id/maps"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <include layout="@layout/custom_view_title"/>
 </RelativeLayout>
