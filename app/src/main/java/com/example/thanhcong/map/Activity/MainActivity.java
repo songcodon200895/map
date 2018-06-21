@@ -32,7 +32,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
-        PlaceSelectionListener{
+        PlaceSelectionListener,GoogleMap.OnMapClickListener{
 
     private final String database_name="Location.sqlite";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -174,4 +174,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    @Override
+    public void onMapClick(LatLng latLng) {
+        
+    }
 }
