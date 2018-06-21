@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final int MY_LOCATION_REQUEST_CODE = 100;
     private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private GoogleMap mMap;
-    SupportMapFragment supportMapFragment;
+    SupportMapFragment supportMapFragment,f1,f2;
     Location first_location=null;
     CardView cardview;
     View buttonposition;
