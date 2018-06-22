@@ -51,7 +51,7 @@ public class DirectionFinder {
     private String createUrl() {
        /* String urlOrigin = URLEncoder.encode(origin, "utf-8");
         String urlDestination = URLEncoder.encode(destination, "utf-8");*/
-        return DIRECTION_URL_API + "origin=" + origin + "&destination=" + destination+"&key="+GOOGLE_API_KEY;
+        return DIRECTION_URL_API + "origin="+origin.latitude+","+origin.longitude + "&destination=" + destination.latitude+","+destination.longitude+"&key="+GOOGLE_API_KEY;
     }
     private class DownloadRawData extends AsyncTask<String, Void, String> {
         @Override
@@ -59,6 +59,7 @@ public class DirectionFinder {
             String link = params[0];
             try {
                 URL url = new URL(link);
+                Log.e("link",link);
                 InputStream is = url.openConnection().getInputStream();
                 StringBuffer buffer = new StringBuffer();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));

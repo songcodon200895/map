@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // position on right bottom
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        layoutParams.setMargins(0, 0, 30, 30);
+        layoutParams.setMargins(0, 0, 30, 60);
 }
 
 
@@ -158,13 +158,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Place selection
     @Override
     public void onPlaceSelected(Place place) {
-        Log.d(TAG, "onPlaceSelected: " + place);
-        MarkerOptions markerOptions =new MarkerOptions();
-        markerOptions.position(place.getLatLng());
-        markerOptions.title(place.getName().toString());
+        //Log.d(TAG, "onPlaceSelected: " + place);
+        //MarkerOptions markerOptions =new MarkerOptions();
+       // markerOptions.position(place.getLatLng());
+      //  markerOptions.title(place.getName().toString());
         mMap.clear();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
-        mMap.addMarker(markerOptions);
+        //mMap.addMarker(markerOptions);
         txt_adress.setText(place.getAddress());
         Log.e("myposition:",new LatLng(first_location.getLatitude(),first_location.getLongitude()).toString());
         Log.e("placeposition",place.getLatLng().toString());
