@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,11 +60,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     TextView txt_adress,txt_time,txt_distance;
     ProgressDialog progressDialog;
     List<Marker> originMarkers = new ArrayList<>();
-
     List<Marker> destinationMarkers = new ArrayList<>();
-
     List<Polyline> polylinePaths = new ArrayList<>();
-
+    Button btn_search;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,9 +73,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void addEvents() {
      placeAutocompleteFragment.setOnPlaceSelectedListener(this);
+     btn_search.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View view) {
+
+         }
+     });
     }
 
     private void addControlls() {
+        btn_search=findViewById(R.id.btn_search);
         txt_adress=findViewById(R.id.txt_adress);
         txt_distance=findViewById(R.id.txt_distance);
         txt_time=findViewById(R.id.txt_time);
@@ -86,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         supportMapFragment.getMapAsync(this);
         placeAutocompleteFragment.setHint("Nhập địa chỉ tìm kiếm");
         cardView_cotainer=findViewById(R.id.cardview_container);
-
     }
 
     @Override
@@ -168,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         txt_adress.setText(place.getAddress());
         Log.e("myposition:",new LatLng(first_location.getLatitude(),first_location.getLongitude()).toString());
         Log.e("placeposition",place.getLatLng().toString());
-        //sendRequest(new LatLng(first_location.getLatitude(),first_location.getLongitude()),place.getLatLng());
+        sendRequest(new LatLng(first_location.getLatitude(),first_location.getLongitude()),place.getLatLng());
     }
 
     @Override
