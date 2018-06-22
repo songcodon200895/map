@@ -1,8 +1,10 @@
 package com.example.thanhcong.map.Activity;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,11 +14,12 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
-
+import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinder;
+import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
+import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
@@ -28,12 +31,20 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
-        PlaceSelectionListener,GoogleMap.OnMapClickListener{
+        PlaceSelectionListener,DirectionFinderListener{
 
     private final String database_name="Location.sqlite";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -43,8 +54,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     SupportMapFragment supportMapFragment,f1,f2;
     Location first_location=null;
-    CardView viewcontainer;
     View buttonposition;
+    CardView cardView_cotainer;
+    TextView txt_adress,txt_time,txt_distance;
+    ProgressDialog progressDialog;
+    List<Marker> originMarkers = new ArrayList<>();
+
+    List<Marker> destinationMarkers = new ArrayList<>();
+
+    List<Polyline> polylinePaths = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,12 +77,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addControlls() {
-        viewcontainer=findViewById(R.id.view_container);
+        txt_adress=findViewById(R.id.txt_adress);
+        txt_distance=findViewById(R.id.txt_distance);
+        txt_time=findViewById(R.id.txt_time);
         supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.maps);
         placeAutocompleteFragment= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         buttonposition=supportMapFragment.getView();
         supportMapFragment.getMapAsync(this);
         placeAutocompleteFragment.setHint("Nhập địa chỉ tìm kiếm");
+        cardView_cotainer=findViewById(R.id.cardview_container);
+
     }
 
     @Override
@@ -142,7 +165,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.clear();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
         mMap.addMarker(markerOptions);
-        viewcontainer.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,100));
+        txt_adress.setText(place.getAddress());
+        Log.e("myposition:",new LatLng(first_location.getLatitude(),first_location.getLongitude()).toString());
+        Log.e("placeposition",place.getLatLng().toString());
+        sendRequest(new LatLng(first_location.getLatitude(),first_location.getLongitude()),place.getLatLng());
     }
 
     @Override
@@ -166,9 +192,79 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+    private void sendRequest(LatLng origin ,LatLng destination) {
+
+        new DirectionFinder(this, origin, destination).execute();
+
+    }
 
     @Override
-    public void onMapClick(LatLng latLng) {
+    public void onDirectionFinderStart() {
+        progressDialog = ProgressDialog.show(this, "Please wait.",
+                "Finding direction..!", true);
+        if (originMarkers != null) {
+            for (Marker marker : originMarkers) {
+                marker.remove();
+            }
+        }
+        if (destinationMarkers != null) {
+            for (Marker marker : destinationMarkers) {
+                marker.remove();
+            }
+        }
+        if (polylinePaths != null) {
+            for (Polyline polyline:polylinePaths ) {
 
+                polyline.remove();
+            }
+        }
+    }
+    @Override
+    public void onDirectionFinderSuccess(List<Route> route) {
+        progressDialog.dismiss();
+
+        polylinePaths = new ArrayList<>();
+
+        originMarkers = new ArrayList<>();
+
+        destinationMarkers = new ArrayList<>();
+
+        for (Route router : route) {
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.startLocation, 16));
+
+            ((TextView) findViewById(R.id.txt_time)).setText(router.duration.text);
+
+            ((TextView) findViewById(R.id.txt_distance)).setText(router.distance.text);
+            Log.e("distance",router.distance.text);
+            originMarkers.add(mMap.addMarker(new MarkerOptions()
+
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue))
+
+                    .title(router.startAddress)
+
+                    .position(router.startLocation)));
+
+            destinationMarkers.add(mMap.addMarker(new MarkerOptions()
+
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
+
+                    .title(router.endAddress)
+
+                    .position(router.endLocation)));
+            PolylineOptions polylineOptions = new PolylineOptions().
+
+                    geodesic(true).
+
+                    color(Color.BLUE).
+
+                    width(10);
+            for (int i = 0; i < router.points.size(); i++)
+
+                polylineOptions.add(router.points.get(i));
+
+            polylinePaths.add(mMap.addPolyline(polylineOptions));
+
+        }
     }
 }
