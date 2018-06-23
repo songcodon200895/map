@@ -152,12 +152,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
              }
              else
                  if(btn_nextmap.getText().toString().equalsIgnoreCase("BẮT ĐẦU")){
-                  MarkerOptions markerOptions =new MarkerOptions();
-                  markerOptions.title(text1);
-                  markerOptions.position(location1);
-                  markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue));
-                  mMap.clear();
-                  mMap.addMarker(markerOptions);
                   sendRequest(location1,location2,1);
                   btn_nextmap.setLayoutParams(layoutParams);
                   linear_container.setLayoutParams(layoutParams);
@@ -302,6 +296,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         polylinePaths = new ArrayList<>();
         if(route.size()>0){
             for (Route router : route) {
+                MarkerOptions markerOptions =new MarkerOptions();
+                markerOptions.title(text1+" "+router.distance.text+" "+router.duration.text);
+                markerOptions.position(location1);
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue));
+                mMap.clear();
+                mMap.addMarker(markerOptions);
                 String adress =router.endAddress.substring(0,router.endAddress.indexOf(",",2));
                 destinationMarkers.add(mMap.addMarker(new MarkerOptions()
 
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             geodesic(true).
                             color(Color.BLUE).
                             width(10);
-
+                     mMap.getUiSettings().setRotateGesturesEnabled(true);
                     for (int i = 0; i < router.points.size(); i++)
                         polylineOptions.add(router.points.get(i));
                     polylinePaths.add(mMap.addPolyline(polylineOptions));
