@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
          public void onPlaceSelected(Place place) {
              btn_nextmap.setText("TÌM ĐƯỜNG");
              location2=place.getLatLng();
-             text2=place.getAddress().toString();
+             text2=place.getAddress().toString().substring(0,place.getAddress().toString().indexOf(",",1));
          }
 
          @Override
@@ -142,8 +142,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
              layoutParams.addRule(RelativeLayout.LEFT_OF,R.id.maps);
              card_place.setLayoutParams(layoutParams);
              RelativeLayout.LayoutParams pagram_linear_container =new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,300);
-             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
-             layoutParams.setMargins(250,100,250,0);
+             pagram_linear_container.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
+             pagram_linear_container.setMargins(100,100,100,0);
              linear_container.setLayoutParams(pagram_linear_container);
              if(btn_nextmap.getText().toString().equalsIgnoreCase("TÌM ĐƯỜNG")){
                  f1.setText(text1);
