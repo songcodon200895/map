@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -14,7 +15,9 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +25,7 @@ import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFind
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
+import com.example.thanhcong.map.Services.LocationChangeLServices;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
@@ -38,31 +42,35 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
-        PlaceSelectionListener,DirectionFinderListener{
+        DirectionFinderListener{
 
+    PolylineOptions polylineOptions;
+    private boolean is_check_show;
     private final String database_name="Location.sqlite";
     private static final String TAG = MainActivity.class.getSimpleName();
-    private PlaceAutocompleteFragment placeAutocompleteFragment;
+    private PlaceAutocompleteFragment placeAutocompleteFragment,f1,f2;
     private final int MY_LOCATION_REQUEST_CODE = 100;
     private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private GoogleMap mMap;
-    SupportMapFragment supportMapFragment,f1,f2;
+    SupportMapFragment supportMapFragment;
     Location first_location=null;
     View buttonposition;
-    CardView cardView_cotainer;
-    TextView txt_adress,txt_time,txt_distance;
     ProgressDialog progressDialog;
     List<Marker> originMarkers = new ArrayList<>();
     List<Marker> destinationMarkers = new ArrayList<>();
     List<Polyline> polylinePaths = new ArrayList<>();
-    Button btn_search;
+    RelativeLayout.LayoutParams layoutParams;
+    Button btn_nextmap;
+    CardView card_place;
+    LinearLayout linear_container;
+    String text1="",text2="";
+    LatLng location1;
+    LatLng location2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,26 +80,110 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addEvents() {
-     placeAutocompleteFragment.setOnPlaceSelectedListener(this);
-     btn_search.setOnClickListener(new View.OnClickListener() {
+       if(mMap!=null){
+          mMap.setOnMyLocationClickListener(new GoogleMap.OnMyLocationClickListener() {
+              @Override
+              public void onMyLocationClick(@NonNull Location location) {
+                  Toast.makeText(MainActivity.this, "Location"+location.toString(), Toast.LENGTH_SHORT).show();
+                  Log.e("is_click","true");
+              }
+          });
+       }
+     placeAutocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+         @Override
+         public void onPlaceSelected(Place place) {
+             sendRequest(new LatLng(first_location.getLatitude(),first_location.getLongitude()),place.getLatLng(),0);
+             layoutParams=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,100);
+             layoutParams.setMargins(250,0,250,0);
+             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
+             btn_nextmap.setText("TÌM ĐƯỜNG");
+             btn_nextmap.setLayoutParams(layoutParams);
+             text1="Vị trí của bạn";
+             location1=new LatLng(mMap.getMyLocation().getLatitude(),mMap.getMyLocation().getLongitude());
+             location2=place.getLatLng();
+             text2=place.getAddress().toString();
+         }
+
+         @Override
+         public void onError(Status status) {
+
+         }
+     });
+     f1.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+         @Override
+         public void onPlaceSelected(Place place) {
+             location1 =place.getLatLng();
+             text1=place.getAddress().toString();
+             btn_nextmap.setText("TÌM ĐƯỜNG");
+         }
+
+         @Override
+         public void onError(Status status) {
+
+         }
+     });
+     f2.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+         @Override
+         public void onPlaceSelected(Place place) {
+             btn_nextmap.setText("TÌM ĐƯỜNG");
+             location2=place.getLatLng();
+             text2=place.getAddress().toString();
+         }
+
+         @Override
+         public void onError(Status status) {
+
+         }
+     });
+     btn_nextmap.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View view) {
-
+             layoutParams=new RelativeLayout.LayoutParams(0,0);
+             layoutParams.addRule(RelativeLayout.LEFT_OF,R.id.maps);
+             card_place.setLayoutParams(layoutParams);
+             RelativeLayout.LayoutParams pagram_linear_container =new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,300);
+             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
+             layoutParams.setMargins(250,100,250,0);
+             linear_container.setLayoutParams(pagram_linear_container);
+             if(btn_nextmap.getText().toString().equalsIgnoreCase("TÌM ĐƯỜNG")){
+                 f1.setText(text1);
+                 f2.setText(text2);
+                 btn_nextmap.setText("Bắt đầu");
+             }
+             else
+                 if(btn_nextmap.getText().toString().equalsIgnoreCase("BẮT ĐẦU")){
+                  MarkerOptions markerOptions =new MarkerOptions();
+                  markerOptions.title(text1);
+                  markerOptions.position(location1);
+                  markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue));
+                  mMap.clear();
+                  mMap.addMarker(markerOptions);
+                  sendRequest(location1,location2,1);
+                  btn_nextmap.setLayoutParams(layoutParams);
+                  linear_container.setLayoutParams(layoutParams);
+                  is_check_show=true;
+                 }
          }
      });
     }
 
     private void addControlls() {
-        btn_search=findViewById(R.id.btn_search);
-        txt_adress=findViewById(R.id.txt_adress);
-        txt_distance=findViewById(R.id.txt_distance);
-        txt_time=findViewById(R.id.txt_time);
+        linear_container=findViewById(R.id.linear_container);
+        f1= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f1);
+        f2= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f2);
+        f1.setHint("Vị trí bắt đầu");
+        f2.setHint("Vị trí kết thúc");
+        card_place=findViewById(R.id.cardview);
+        btn_nextmap=findViewById(R.id.btn_nextmap);
         supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.maps);
         placeAutocompleteFragment= (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         buttonposition=supportMapFragment.getView();
         supportMapFragment.getMapAsync(this);
         placeAutocompleteFragment.setHint("Nhập địa chỉ tìm kiếm");
-        cardView_cotainer=findViewById(R.id.cardview_container);
+        layoutParams=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0);
+        //layoutParams.setMargins(100,0,100,0);
+        layoutParams.addRule(RelativeLayout.LEFT_OF,R.id.maps);
+        btn_nextmap.setLayoutParams(layoutParams);
     }
 
     @Override
@@ -160,27 +252,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    //Place selection
-    @Override
-    public void onPlaceSelected(Place place) {
-        Log.d(TAG, "onPlaceSelected: " + place);
-        MarkerOptions markerOptions =new MarkerOptions();
-        markerOptions.position(place.getLatLng());
-        markerOptions.title(place.getName().toString());
-        mMap.clear();
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
-        //mMap.addMarker(markerOptions);
-        txt_adress.setText(place.getAddress());
-        Log.e("myposition:",new LatLng(first_location.getLatitude(),first_location.getLongitude()).toString());
-        Log.e("placeposition",place.getLatLng().toString());
-        sendRequest(new LatLng(first_location.getLatitude(),first_location.getLongitude()),place.getLatLng());
-    }
-
-    @Override
-    public void onError(Status status) {
-       Log.e("error",status.toString());
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
@@ -197,9 +268,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-    private void sendRequest(LatLng origin ,LatLng destination) {
+    private void sendRequest(LatLng origin ,LatLng destination,int request_code) {
 
-        new DirectionFinder(this, origin, destination).execute();
+        new DirectionFinder(this, origin, destination,request_code).execute();
 
     }
 
@@ -225,51 +296,58 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
     @Override
-    public void onDirectionFinderSuccess(List<Route> route) {
+    public void onDirectionFinderSuccess(List<Route> route,int request_code) {
         progressDialog.dismiss();
-
-        polylinePaths = new ArrayList<>();
-
-        originMarkers = new ArrayList<>();
-
         destinationMarkers = new ArrayList<>();
+        polylinePaths = new ArrayList<>();
+        if(route.size()>0){
+            for (Route router : route) {
+                String adress =router.endAddress.substring(0,router.endAddress.indexOf(",",2));
+                destinationMarkers.add(mMap.addMarker(new MarkerOptions()
 
-        for (Route router : route) {
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.startLocation, 16));
+                        .title(adress+"  "+router.distance.text+"  "+router.duration.text)
 
-            ((TextView) findViewById(R.id.txt_time)).setText(router.duration.text);
+                        .position(router.endLocation)));
+                if(request_code==1){
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.startLocation, 16));
+                     polylineOptions = new PolylineOptions().
+                            geodesic(true).
+                            color(Color.BLUE).
+                            width(10);
 
-            ((TextView) findViewById(R.id.txt_distance)).setText(router.distance.text);
-            Log.e("distance",router.distance.text);
-            originMarkers.add(mMap.addMarker(new MarkerOptions()
-
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue))
-
-                    .title(router.startAddress)
-
-                    .position(router.startLocation)));
-
-            destinationMarkers.add(mMap.addMarker(new MarkerOptions()
-
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
-
-                    .title(router.endAddress)
-
-                    .position(router.endLocation)));
-            PolylineOptions polylineOptions = new PolylineOptions().
-
-                    geodesic(true).
-
-                    color(Color.BLUE).
-
-                    width(10);
-            for (int i = 0; i < router.points.size(); i++)
-
-                polylineOptions.add(router.points.get(i));
-
-            polylinePaths.add(mMap.addPolyline(polylineOptions));
-
+                    for (int i = 0; i < router.points.size(); i++)
+                        polylineOptions.add(router.points.get(i));
+                    polylinePaths.add(mMap.addPolyline(polylineOptions));
+                }
+                else {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.endLocation, 16));
+                }
+            }
         }
+        else{
+            Toast.makeText(this, "Không tìm thấy quãng đường", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(is_check_show){
+            layoutParams=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(100,200,100,0);
+            card_place.setLayoutParams(layoutParams);
+            RelativeLayout.LayoutParams params =new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,110);
+            params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
+            params.setMargins(250,0,250,0);
+            btn_nextmap.setLayoutParams(params);
+            btn_nextmap.setText("Tìm đường");
+            is_check_show=false;
+            mMap.clear();
+        }
+        else {
+            super.onBackPressed();
+        }
+
     }
 }

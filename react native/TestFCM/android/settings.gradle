@@ -1,0 +1,3 @@
+rootProject.name = 'TestFCM'
+
+include ':app'

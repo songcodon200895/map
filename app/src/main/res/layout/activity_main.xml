@@ -5,67 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Activity.MainActivity">
-    <android.support.v7.widget.CardView
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp"
-        android:id="@+id/cardview_container"
-        android:layout_alignParentTop="false"
+
+    <Button
+        android:background="@drawable/boder_search"
+        android:id="@+id/btn_nextmap"
         android:layout_alignParentBottom="true"
+        android:layout_marginLeft="100dp"
+        android:layout_marginRight="100dp"
+        android:text="Tìm đường đi"
+        android:textSize="15sp"
+        android:layout_toEndOf="@id/maps"
         android:layout_width="match_parent"
-        android:layout_height="100dp">
-        <LinearLayout
-            android:weightSum="1"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-         <LinearLayout
-             android:weightSum="1"
-             android:orientation="horizontal"
-             android:layout_weight="0.5"
-             android:layout_width="match_parent"
-             android:layout_height="0dp">
-             <TextView
-                 android:id="@+id/txt_adress"
-                 android:textColor="#000000"
-                 android:textStyle="bold"
-                 android:typeface="sans"
-                 android:textSize="16sp"
-                 android:gravity="center"
-                 android:text="Adress Name"
-                 android:layout_weight="0.5"
-                 android:layout_width="0dp"
-                 android:layout_height="match_parent"/>
-             <TextView
-                 android:id="@+id/txt_time"
-                 android:typeface="sans"
-                 android:textColor="#000000"
-                 android:textStyle="bold"
-                 android:textSize="16sp"
-                 android:gravity="center"
-                 android:layout_weight="0.2"
-                 android:layout_width="0dp"
-                 android:layout_height="match_parent"
-                 android:text="Time"/>
-             <TextView
-                 android:id="@+id/txt_distance"
-                 android:layout_width="0dp"
-                 android:layout_height="match_parent"
-                 android:text="Distance"
-                 android:gravity="center"
-                 android:textColor="#000000"
-                 android:typeface="sans"
-                 android:textStyle="bold"
-                 android:layout_weight="0.3"/>
-         </LinearLayout>
-           <Button
-               android:id="@+id/btn_search"
-               android:background="#1b44d9"
-               android:layout_width="match_parent"
-               android:layout_height="0dp"
-               android:layout_weight="0.5"
-               android:text="Tìm đường"/>
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
+        android:layout_height="40dp" />
+
     <android.support.v7.widget.CardView
         android:background="@drawable/boder_search"
         android:id="@+id/cardview"
@@ -89,4 +41,48 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <LinearLayout
+        android:id="@+id/linear_container"
+        android:layout_toEndOf="@id/maps"
+        android:layout_marginTop="15dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:weightSum="1"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="90dp">
+        <RelativeLayout
+            android:background="@drawable/boder_search"
+            android:layout_weight="0.4"
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+            <fragment
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:id="@+id/f1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:background="@drawable/boder_search"
+            android:layout_marginTop="15dp"
+            android:layout_weight="0.4"
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+            <fragment
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:id="@+id/f2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                />
+        </RelativeLayout>
+
+    </LinearLayout>
 </RelativeLayout>

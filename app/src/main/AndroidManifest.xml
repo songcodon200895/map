@@ -45,9 +45,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.Main2Activity"></activity>
-
-        <service android:name=".Services.LocationService" />
     </application>
 
 </manifest>
