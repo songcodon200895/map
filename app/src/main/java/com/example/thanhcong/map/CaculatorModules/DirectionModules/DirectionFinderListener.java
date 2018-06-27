@@ -14,6 +14,6 @@ public interface DirectionFinderListener {
 
     void onDirectionFinderStart(int request_code);
 
-    void onDirectionFinderSuccess(List<Route> route,int request_code);
+    void onDirectionFinderSuccess(List<Route> route,int request_code1,int request_code2);
 
 }

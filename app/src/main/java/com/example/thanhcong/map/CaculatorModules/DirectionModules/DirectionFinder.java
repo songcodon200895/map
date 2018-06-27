@@ -127,7 +127,7 @@ public class DirectionFinder {
             route.points = decodePolyLine(overview_polylineJson.getString("points"));
             routes.add(route);
         }
-        listener.onDirectionFinderSuccess(routes,REQUEST_CODE1);
+        listener.onDirectionFinderSuccess(routes,REQUEST_CODE1,REQUEST_CODE2);
 
     }
 

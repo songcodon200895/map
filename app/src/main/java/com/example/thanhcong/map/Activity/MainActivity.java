@@ -54,11 +54,10 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
-        DirectionFinderListener{
+        DirectionFinderListener,GoogleMap.OnMapClickListener,GoogleMap.OnMyLocationButtonClickListener{
 
     PolylineOptions polylineOptions;
     private boolean is_check_show,is_check_update,is_check_click_f1;
-    private final String database_name = "Location.sqlite";
     private static final String TAG = MainActivity.class.getSimpleName();
     private PlaceAutocompleteFragment placeAutocompleteFragment, f1, f2;
     private final int MY_LOCATION_REQUEST_CODE = 100;
@@ -102,6 +101,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         placeAutocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
+                if(first_location==null){
+                    mMap.clear();
+                    MarkerOptions options =new MarkerOptions();
+                    options.title(place.getAddress().toString());
+                    options.position(place.getLatLng());
+                    mMap.addMarker(options);
+                    CameraUpdate move =CameraUpdateFactory.newLatLng(place.getLatLng());
+                    mMap.moveCamera(move);
+                    mMap.animateCamera(CameraUpdateFactory.zoomBy(17));
+                    return;
+                }
                 sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), place.getLatLng(), 0,0);
                 layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 100);
                 layoutParams.setMargins(250, 0, 250, 0);
@@ -205,11 +215,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationChangeListener(this);
+        mMap.setOnMapClickListener(this);
         markerOptions = new MarkerOptions();
     }
-
-
-
     private void checkpermission(){
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -233,18 +241,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
     }
-
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_LOCATION_REQUEST_CODE: {
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
                     if (ContextCompat.checkSelfPermission(this,
                             Manifest.permission.ACCESS_FINE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
@@ -268,10 +270,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (first_location == null) {
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
             View locationButton = ((View) buttonposition.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-            // and next place it, on bottom right (as Google Maps app)
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
                     locationButton.getLayoutParams();
-            // position on right bottom
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
             layoutParams.setMargins(0, 0, 30, 60);
@@ -335,8 +335,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onDirectionFinderStart(int request_code) {
-        if(request_code==0){
-            progressDialog = ProgressDialog.show(this, "Please wait.",
+        progressDialog =new ProgressDialog(getApplicationContext());
+        if(request_code==1 && is_check_click_f1){
+            is_check_click_f1=false;
+            progressDialog.show(this, "Please wait.",
                     "Finding direction..!", true);
         }
 
@@ -359,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onDirectionFinderSuccess(List<Route> route, int request_code) {
+    public void onDirectionFinderSuccess(List<Route> route, int request_code1,int request_code2) {
         progressDialog.dismiss();
         destinationMarkers = new ArrayList<>();
         polylinePaths = new ArrayList<>();
@@ -374,8 +376,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .title(adress + "  " + router.distance.text + "  " + router.duration.text)
 
                         .position(router.endLocation)));
-                if (request_code == 1) {
-                   // mMap.moveCamera(CameraUpdateFactory.newLatLng(router.startLocation));
+                if (request_code1 == 1) {
                     polylineOptions = new PolylineOptions().
                             geodesic(true).
                             color(Color.BLUE).
@@ -383,9 +384,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.getUiSettings().setRotateGesturesEnabled(true);
                     for (int i = 0; i < router.points.size(); i++)
                         polylineOptions.add(router.points.get(i));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(router.startLocation));
                     polylinePaths.add(mMap.addPolyline(polylineOptions));
                 } else {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.endLocation, 16));
+                    text2=router.endAddress;
+                    f2.setText(router.endAddress);
+                    placeAutocompleteFragment.setText(router.endAddress);
                 }
             }
         } else {
@@ -396,6 +401,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onBackPressed() {
         if (is_check_show) {
+            is_check_click_f1=true;
             layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.setMargins(100, 200, 100, 0);
             card_place.setLayoutParams(layoutParams);
@@ -421,5 +427,45 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onBackPressed();
         }
 
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        if(!is_check_show){
+            Toast.makeText(this, "Dang o chon duong", Toast.LENGTH_SHORT).show();
+            if(mMap==null){
+
+            }
+            else {
+                sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), latLng, 0,0);
+                layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 100);
+                layoutParams.setMargins(250, 0, 250, 0);
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+                btn_nextmap.setText("TÌM ĐƯỜNG");
+                btn_nextmap.setLayoutParams(layoutParams);
+                text1 = "Vị trí của bạn";
+                location1 = new LatLng(first_location.getLatitude(), first_location.getLongitude());
+                location2 = latLng;
+            }
+        }
+        else
+        {
+            Toast.makeText(this, "Dang o dan duong", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public boolean onMyLocationButtonClick() {
+        if(!is_check_show){
+            if(mMap==null){
+
+            }
+            else {
+                location1 = new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude());
+                text1="Vị trí của tôi";
+                f1.setText("Vị trí của tôi");
+            }
+        }
+        return false;
     }
 }
