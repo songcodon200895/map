@@ -1,15 +1,11 @@
 package com.example.thanhcong.map.Activity;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -24,14 +20,11 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinder;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
-import com.example.thanhcong.map.Services.LocationChangeLServices;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -47,6 +40,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -443,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 text1 = "Vị trí của bạn";
                 location1 = new LatLng(first_location.getLatitude(), first_location.getLongitude());
                 location2 = latLng;
+
             }
         }
         else
