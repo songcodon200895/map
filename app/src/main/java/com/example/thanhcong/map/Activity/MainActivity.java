@@ -283,14 +283,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.moveCamera(center);
             mMap.animateCamera(zoom);
         } else {
-            if(is_check_show==true && is_check_click_f1==false){
+            if(is_check_show==true){
                 CameraUpdate center = CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude()));
                 CameraUpdate zoom = CameraUpdateFactory.zoomTo(17);
                 mMap.moveCamera(center);
                 mMap.animateCamera(zoom);
                 if(!is_check_update){
                     is_check_update=true;
-                    sendRequest(new LatLng(location.getLatitude(),location.getLongitude()),location2,1,1);
+                    sendRequest(location1,location2,1,1);
                     thread = new Thread() {
                         @Override
                         public void run() {
@@ -335,13 +335,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onDirectionFinderStart(int request_code) {
-        progressDialog =new ProgressDialog(getApplicationContext());
-        if(request_code==1 && is_check_click_f1){
-            is_check_click_f1=false;
-            progressDialog.show(this, "Please wait.",
-                    "Finding direction..!", true);
-        }
-
         if (originMarkers != null) {
             for (Marker marker : originMarkers) {
                 marker.remove();
@@ -362,7 +355,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onDirectionFinderSuccess(List<Route> route, int request_code1,int request_code2) {
-        progressDialog.dismiss();
         destinationMarkers = new ArrayList<>();
         polylinePaths = new ArrayList<>();
         if (route.size() > 0) {
@@ -384,8 +376,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.getUiSettings().setRotateGesturesEnabled(true);
                     for (int i = 0; i < router.points.size(); i++)
                         polylineOptions.add(router.points.get(i));
-                        mMap.moveCamera(CameraUpdateFactory.newLatLng(router.startLocation));
-                    polylinePaths.add(mMap.addPolyline(polylineOptions));
+                       if(request_code2==1){
+                           mMap.moveCamera(CameraUpdateFactory.newLatLng(router.startLocation));
+                       }
+                       else{
+                           mMap.moveCamera(CameraUpdateFactory.newLatLng(router.endLocation));
+                       }
+                       polylinePaths.add(mMap.addPolyline(polylineOptions));
                 } else {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(router.endLocation, 16));
                     text2=router.endAddress;
