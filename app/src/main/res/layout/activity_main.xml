@@ -58,14 +58,28 @@
             android:layout_weight="0.4"
             android:layout_width="match_parent"
             android:layout_height="0dp">
-            <fragment
+
+
+            <com.example.thanhcong.map.CaculatorModules.DirectionModules.CustomAutoComplateTextView
+                android:autoLink="map"
+                android:hint="Vị trí bắt đầu"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:id="@+id/f1"
+                android:singleLine="true"
+                android:backgroundTint="@android:color/transparent"/>
+
+           <!-- <fragment
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="30dp"
                 android:id="@+id/f1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
-                />
+                />-->
         </RelativeLayout>
 
         <RelativeLayout

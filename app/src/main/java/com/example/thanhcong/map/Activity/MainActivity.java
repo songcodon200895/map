@@ -15,15 +15,20 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinder;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
+import com.example.thanhcong.map.CaculatorModules.DirectionModules.HttpConnector;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
 import com.example.thanhcong.map.database.DatabaseHelper;
@@ -44,23 +49,27 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
         DirectionFinderListener,GoogleMap.OnMapClickListener,GoogleMap.OnMyLocationButtonClickListener{
 
-    PolylineOptions polylineOptions;
+    private final String _URL="https://maps.googleapis.com/maps/api/place/autocomplete/json?input=";
+    private final String _KEYPLACE="AIzaSyAT47CaIFnGlbdQOrsqHr8cDVKvd34wQ3I";
+    private PolylineOptions polylineOptions;
     private boolean is_check_show,is_check_update,is_check_kill;
     private static final String TAG = MainActivity.class.getSimpleName();
-    private PlaceAutocompleteFragment placeAutocompleteFragment, f1, f2;
+    private PlaceAutocompleteFragment placeAutocompleteFragment,f2;
+    private AutoCompleteTextView f1;
     private final int MY_LOCATION_REQUEST_CODE = 100;
     private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private GoogleMap mMap;
-    SupportMapFragment supportMapFragment;
+    private SupportMapFragment supportMapFragment;
     Location first_location = null;
     View buttonposition;
-    ProgressDialog progressDialog;
     List<Marker> originMarkers = new ArrayList<>();
     List<Marker> destinationMarkers = new ArrayList<>();
     List<Polyline> polylinePaths = new ArrayList<>();
@@ -69,12 +78,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     CardView card_place;
     LinearLayout linear_container;
     String text1 = "", text2 = "";
-    LatLng location1;
-    LatLng location2;
+    LatLng location1,location2;
     MarkerOptions markerOptions;
     Thread thread;
     DatabaseHelper database;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         addEvents();
     }
     private void addEvents() {
+
         if (mMap != null) {
             mMap.setOnMyLocationClickListener(new GoogleMap.OnMyLocationClickListener() {
                 @Override
@@ -130,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-        f1.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+      /*  f1.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 location1 = place.getLatLng();
@@ -142,7 +150,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onError(Status status) {
 
             }
+        });*/
+
+        f1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
         });
+
+        f1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+            }
+        });
+
         f2.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -182,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void addControlls() {
         linear_container = findViewById(R.id.linear_container);
-        f1 = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f1);
+        f1 =findViewById(R.id.f1);
         f2 = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f2);
         f1.setHint("Vị trí bắt đầu");
         f2.setHint("Vị trí kết thúc");
