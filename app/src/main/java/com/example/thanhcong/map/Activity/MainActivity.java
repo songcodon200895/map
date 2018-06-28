@@ -3,7 +3,9 @@ package com.example.thanhcong.map.Activity;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -24,6 +26,8 @@ import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFind
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
+import com.example.thanhcong.map.database.DatabaseHelper;
+import com.example.thanhcong.map.database.QueryData;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
@@ -40,19 +44,14 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
         DirectionFinderListener,GoogleMap.OnMapClickListener,GoogleMap.OnMyLocationButtonClickListener{
 
     PolylineOptions polylineOptions;
-    private boolean is_check_show,is_check_update,is_check_click_f1;
+    private boolean is_check_show,is_check_update,is_check_kill;
     private static final String TAG = MainActivity.class.getSimpleName();
     private PlaceAutocompleteFragment placeAutocompleteFragment, f1, f2;
     private final int MY_LOCATION_REQUEST_CODE = 100;
@@ -74,15 +73,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng location2;
     MarkerOptions markerOptions;
     Thread thread;
+    DatabaseHelper database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        database =new DatabaseHelper(getApplicationContext(),QueryData.DATABASE_NAME,null,1);
+        database.query_excute(QueryData.CREATETABLE);
+        Cursor cursor =database.query_data(QueryData.LOCATION_NEW_QUERY,null);
+        if(cursor.moveToFirst()){
+            double lat =Double.parseDouble(cursor.getString(1));
+            double longt=Double.parseDouble(cursor.getString(2));
+        }
         addControlls();
         addEvents();
     }
-
     private void addEvents() {
         if (mMap != null) {
             mMap.setOnMyLocationClickListener(new GoogleMap.OnMyLocationClickListener() {
@@ -130,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 location1 = place.getLatLng();
                 text1 = place.getAddress().toString();
                 btn_nextmap.setText("TÌM ĐƯỜNG");
-                is_check_click_f1=true;
             }
 
             @Override
@@ -207,7 +212,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationChangeListener(this);
         mMap.setOnMapClickListener(this);
@@ -278,14 +282,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.moveCamera(center);
             mMap.animateCamera(zoom);
         } else {
-            if(is_check_show==true){
+            if(is_check_show==true||is_check_kill==true){
                 CameraUpdate center = CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude()));
                 CameraUpdate zoom = CameraUpdateFactory.zoomTo(17);
                 mMap.moveCamera(center);
                 mMap.animateCamera(zoom);
                 if(!is_check_update){
                     is_check_update=true;
-                    sendRequest(location1,location2,1,1);
+                    sendRequest(new LatLng(location.getLatitude(),location1.longitude),location2,1,1);
                     thread = new Thread() {
                         @Override
                         public void run() {
@@ -323,7 +327,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void sendRequest(LatLng origin, LatLng destination, int request_code1,int request_code2) {
-
         new DirectionFinder(this, origin, destination, request_code1,request_code2).execute();
 
     }
@@ -357,11 +360,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.clear();
                 String adress = router.endAddress.substring(0, router.endAddress.indexOf(",", 2));
                 destinationMarkers.add(mMap.addMarker(new MarkerOptions()
-
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
-
                         .title(adress + "  " + router.distance.text + "  " + router.duration.text)
-
                         .position(router.endLocation)));
                 if (request_code1 == 1) {
                     polylineOptions = new PolylineOptions().
@@ -393,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onBackPressed() {
         if (is_check_show) {
-            is_check_click_f1=true;
+            is_check_kill=false;
             layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.setMargins(100, 200, 100, 0);
             card_place.setLayoutParams(layoutParams);
@@ -418,7 +418,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         else {
             super.onBackPressed();
         }
-
     }
 
     @Override
@@ -460,5 +459,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         return false;
+    }
+
+    @Override
+    protected void onStop() {
+        database.query_excute(QueryData.DELETE_LOCATION);
+        SharedPreferences.Editor editor=getSharedPreferences("location",MODE_PRIVATE).edit();
+        editor.clear();
+        if(is_check_show){
+            database.query_excute(QueryData.SAVELOCATION(location2.latitude,location2.longitude,1));
+            editor.putString("latitute",location2.latitude+"");
+            editor.putString("longitute",location2.longitude+"");
+            editor.commit();
+            is_check_kill=true;
+        }
+        super.onStop();
     }
 }

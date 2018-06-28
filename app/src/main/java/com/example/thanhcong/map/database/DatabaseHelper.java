@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void query_excute(String query){
         SQLiteDatabase db =this.getReadableDatabase();
         db.execSQL(query);
+        Log.e("create_database","success!");
     }
 
     public Cursor query_data(String query,String selectionArgs[]){
