@@ -42,6 +42,7 @@ import com.example.thanhcong.map.R;
 import com.example.thanhcong.map.database.DatabaseHelper;
 import com.example.thanhcong.map.database.QueryData;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -240,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void addControlls() {
         linear_container = findViewById(R.id.linear_container);
         f1 =findViewById(R.id.f1);
-        f1.setTextSize(17);
         f2 = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f2);
         f1.setHint("Vị trí bắt đầu");
         f2.setHint("Vị trí kết thúc");
@@ -342,10 +342,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.animateCamera(zoom);
         } else {
             if(is_check_show==true||is_check_kill==true){
-                CameraUpdate center = CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude()));
-                CameraUpdate zoom = CameraUpdateFactory.zoomTo(17);
-                mMap.moveCamera(center);
-                mMap.animateCamera(zoom);
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location1,17));
                 if(!is_check_update){
                     is_check_update=true;
                     sendRequest(new LatLng(location.getLatitude(),location1.longitude),location2,1,1);
