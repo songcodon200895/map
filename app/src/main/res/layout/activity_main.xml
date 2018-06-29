@@ -59,7 +59,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp">
 
-
             <com.example.thanhcong.map.CaculatorModules.DirectionModules.CustomAutoComplateTextView
                 android:autoLink="map"
                 android:hint="Vị trí bắt đầu"
@@ -71,7 +70,6 @@
                 android:id="@+id/f1"
                 android:singleLine="true"
                 android:backgroundTint="@android:color/transparent"/>
-
            <!-- <fragment
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="30dp"

@@ -1,13 +1,19 @@
 package com.example.thanhcong.map.Activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
+import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -25,10 +31,12 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinder;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.HttpConnector;
+import com.example.thanhcong.map.CaculatorModules.DirectionModules.PlacesTask;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.Route;
 import com.example.thanhcong.map.R;
 import com.example.thanhcong.map.database.DatabaseHelper;
@@ -43,15 +51,20 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
@@ -60,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final String _URL="https://maps.googleapis.com/maps/api/place/autocomplete/json?input=";
     private final String _KEYPLACE="AIzaSyAT47CaIFnGlbdQOrsqHr8cDVKvd34wQ3I";
     private PolylineOptions polylineOptions;
-    private boolean is_check_show,is_check_update,is_check_kill;
+    private boolean is_check_show,is_check_update,is_check_kill,is_click_f1;
     private static final String TAG = MainActivity.class.getSimpleName();
     private PlaceAutocompleteFragment placeAutocompleteFragment,f2;
     private AutoCompleteTextView f1;
@@ -82,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     MarkerOptions markerOptions;
     Thread thread;
     DatabaseHelper database;
+    PlacesTask placesTask;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         addEvents();
     }
     private void addEvents() {
-
         if (mMap != null) {
             mMap.setOnMyLocationClickListener(new GoogleMap.OnMyLocationClickListener() {
                 @Override
@@ -160,7 +173,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+             placesTask=new PlacesTask(getApplicationContext(),f1);
+             placesTask.execute(charSequence.toString());
             }
 
             @Override
@@ -170,11 +184,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         f1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                HashMap<String,String>value= (HashMap<String, String>) adapterView.getItemAtPosition(position);
+                LatLng latLng=HttpConnector.getLocationFromAddress(getApplicationContext(),value.get("description"));
+                Toast.makeText(MainActivity.this, "values:"+latLng.toString(), Toast.LENGTH_SHORT).show();
+                location1 =latLng;
+                text1 =value.get("description");
+                btn_nextmap.setText("TÌM ĐƯỜNG");
             }
         });
 
+        f1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               is_click_f1=true;
+            }
+        });
         f2.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -215,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void addControlls() {
         linear_container = findViewById(R.id.linear_container);
         f1 =findViewById(R.id.f1);
+        f1.setTextSize(17);
         f2 = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.f2);
         f1.setHint("Vị trí bắt đầu");
         f2.setHint("Vị trí kết thúc");
@@ -244,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        mMap.setOnMyLocationButtonClickListener(this);
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationChangeListener(this);
         mMap.setOnMapClickListener(this);
@@ -387,6 +414,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onDirectionFinderSuccess(List<Route> route, int request_code1,int request_code2) {
         destinationMarkers = new ArrayList<>();
         polylinePaths = new ArrayList<>();
+        @SuppressLint("RestrictedApi") PatternItem item1 =new PatternItem(1, 0.4f);
+        List<PatternItem>items =new ArrayList<>();
+        items.add(item1);
         if (route.size() > 0) {
             for (Route router : route) {
                 mMap.clear();
@@ -397,9 +427,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .position(router.endLocation)));
                 if (request_code1 == 1) {
                     polylineOptions = new PolylineOptions().
-                            geodesic(true).
-                            color(Color.BLUE).
-                            width(10);
+                            geodesic(false).clickable(true).
+                            color(Color.BLUE).pattern(items).
+                            width(13);
                     mMap.getUiSettings().setRotateGesturesEnabled(true);
                     for (int i = 0; i < router.points.size(); i++)
                         polylineOptions.add(router.points.get(i));
@@ -455,7 +485,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapClick(LatLng latLng) {
         if(!is_check_show){
-            Toast.makeText(this, "Dang o chon duong", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "Dang o chon duong", Toast.LENGTH_SHORT).show();
             if(mMap==null){
 
             }
@@ -469,12 +499,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 text1 = "Vị trí của bạn";
                 location1 = new LatLng(first_location.getLatitude(), first_location.getLongitude());
                 location2 = latLng;
-
             }
         }
         else
         {
-            Toast.makeText(this, "Dang o dan duong", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "Dang o dan duong", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -488,6 +517,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 location1 = new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude());
                 text1="Vị trí của tôi";
                 f1.setText("Vị trí của tôi");
+                Toast.makeText(this, "This is my location", Toast.LENGTH_SHORT).show();
             }
         }
         return false;
