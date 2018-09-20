@@ -2,18 +2,13 @@ package com.example.thanhcong.map.Activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
-import android.os.Parcel;
+import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -31,7 +26,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinder;
 import com.example.thanhcong.map.CaculatorModules.DirectionModules.DirectionFinderListener;
@@ -52,7 +46,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -60,21 +53,19 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.model.RoundCap;
-
-import java.io.IOException;
-import java.net.URI;
+import com.google.maps.android.PolyUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnMyLocationChangeListener,
-        DirectionFinderListener,GoogleMap.OnMapClickListener,GoogleMap.OnMyLocationButtonClickListener{
+        DirectionFinderListener,GoogleMap.OnMapClickListener
+        ,GoogleMap.OnMyLocationButtonClickListener{
 
     private final String _URL="https://maps.googleapis.com/maps/api/place/autocomplete/json?input=";
     private final String _KEYPLACE="AIzaSyAT47CaIFnGlbdQOrsqHr8cDVKvd34wQ3I";
     private PolylineOptions polylineOptions;
-    private boolean is_check_show,is_check_update,is_check_kill,is_click_f1;
+    private boolean is_check_show,is_check_update,is_check_kill,is_default_postion=true;
     private static final String TAG = MainActivity.class.getSimpleName();
     private PlaceAutocompleteFragment placeAutocompleteFragment,f2;
     private AutoCompleteTextView f1;
@@ -87,13 +78,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     List<Marker> originMarkers = new ArrayList<>();
     List<Marker> destinationMarkers = new ArrayList<>();
     List<Polyline> polylinePaths = new ArrayList<>();
+    List<LatLng>latLngList =new ArrayList<>();
     RelativeLayout.LayoutParams layoutParams;
     Button btn_nextmap;
     CardView card_place;
     LinearLayout linear_container;
     String text1 = "", text2 = "";
     LatLng location1,location2;
-    MarkerOptions markerOptions;
+    MarkerOptions markerOptions=new MarkerOptions();
     Thread thread;
     DatabaseHelper database;
     PlacesTask placesTask;
@@ -121,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
         }
+
+
         placeAutocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -135,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.animateCamera(CameraUpdateFactory.zoomBy(17));
                     return;
                 }
-                sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), place.getLatLng(), 0,0);
+                sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), place.getLatLng(), 0,0,0);
                 layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 100);
                 layoutParams.setMargins(250, 0, 250, 0);
                 layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -198,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         f1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               is_click_f1=true;
+
             }
         });
         f2.setOnPlaceSelectedListener(new PlaceSelectionListener() {
@@ -229,10 +223,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     f2.setText(text2);
                     btn_nextmap.setText("Bắt đầu");
                 } else if (btn_nextmap.getText().toString().equalsIgnoreCase("BẮT ĐẦU")) {
-                    sendRequest(location1, location2, 1,0);
+                    if(location1.toString().equalsIgnoreCase((new LatLng(mMap.getMyLocation().getLatitude(),mMap.getMyLocation().getLongitude())).toString())){
+                        is_default_postion=true;
+                    }
+                    else {
+                        is_default_postion=false;
+                    }
+                    sendRequest(location1, location2, 1,0,0);
                     btn_nextmap.setLayoutParams(layoutParams);
                     linear_container.setLayoutParams(layoutParams);
                     is_check_show = true;
+                    first_location=new Location(LocationManager.GPS_PROVIDER);
+                    first_location.setLatitude(location1.latitude);
+                    first_location.setLongitude(location1.longitude);
                 }
             }
         });
@@ -274,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationChangeListener(this);
         mMap.setOnMapClickListener(this);
-        markerOptions = new MarkerOptions();
     }
     private void checkpermission(){
         if (ContextCompat.checkSelfPermission(this,
@@ -342,24 +344,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.animateCamera(zoom);
         } else {
             if(is_check_show==true||is_check_kill==true){
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location1,17));
-                if(!is_check_update){
-                    is_check_update=true;
-                    sendRequest(new LatLng(location.getLatitude(),location1.longitude),location2,1,1);
-                    thread = new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                while(true) {
-                                    sleep(5000);
-                                    is_check_update=false;
+                if (is_default_postion) {
+                    location1=new LatLng(mMap.getMyLocation().getLatitude(),mMap.getMyLocation().getLongitude());
+                }
+                if(polylinePaths==null||polylinePaths.size()<=0||!PolyUtil.isLocationOnPath(new LatLng(location.getLatitude(),location.getLongitude())
+                        ,latLngList,true,20.0f)){
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location1,17));
+                    sendRequest(location1,location2,1,1,0);
+                }
+                else {
+                    if(!is_check_update){
+                        is_check_update=true;
+                        sendRequest(new LatLng(mMap.getMyLocation().getLatitude(),mMap.getMyLocation().getLongitude()),location2,1,1,1);
+                        thread = new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    while(true) {
+                                        sleep(5000);
+                                        is_check_update=false;
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
                             }
-                        }
-                    };
-                    thread.start();
+                        };
+                        thread.start();
+                    }
                 }
             }
         }
@@ -382,26 +393,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void sendRequest(LatLng origin, LatLng destination, int request_code1,int request_code2) {
-        new DirectionFinder(this, origin, destination, request_code1,request_code2).execute();
+    private void sendRequest(LatLng origin, LatLng destination, int request_code1,int request_code2,int request_code3) {
+        new DirectionFinder(this, origin, destination, request_code1,request_code2,request_code3).execute();
 
     }
 
     @Override
-    public void onDirectionFinderStart(int request_code) {
-        if (originMarkers != null) {
+    public void onDirectionFinderStart(int request_code,int request_code3) {
+        if (originMarkers != null && request_code3!=1) {
             for (Marker marker : originMarkers) {
                 marker.remove();
             }
         }
-        if (destinationMarkers != null) {
+        if (destinationMarkers != null && request_code3!=1) {
             for (Marker marker : destinationMarkers) {
                 marker.remove();
             }
         }
-        if (polylinePaths != null) {
+        if (polylinePaths != null && request_code3!=1) {
             for (Polyline polyline : polylinePaths) {
-
                 polyline.remove();
             }
         }
@@ -416,11 +426,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         items.add(item1);
         if (route.size() > 0) {
             for (Route router : route) {
+                String adressend = router.endAddress.substring(0, router.endAddress.indexOf(",", 2));
+                String adressstart=router.startAddress.substring(0,router.startAddress.indexOf(",",2));
+                latLngList=router.points;
                 mMap.clear();
-                String adress = router.endAddress.substring(0, router.endAddress.indexOf(",", 2));
+                if(is_default_postion){
+                    markerOptions =new MarkerOptions();
+                    markerOptions.title(adressstart+"  "+router.distance.text+"  "+router.duration.text);
+                    markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue));
+                    markerOptions.position(location1);
+                    mMap.addMarker(markerOptions);
+                }
                 destinationMarkers.add(mMap.addMarker(new MarkerOptions()
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
-                        .title(adress + "  " + router.distance.text + "  " + router.duration.text)
+                        .title(adressend + "  " + router.distance.text + "  " + router.duration.text)
                         .position(router.endLocation)));
                 if (request_code1 == 1) {
                     polylineOptions = new PolylineOptions().
@@ -447,6 +466,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             Toast.makeText(this, "Không tìm thấy quãng đường", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onDistanceDurationSuccess(List<Route> routes, int code) {
+       if(routes.size()>0){
+           for(Marker marker : destinationMarkers){
+               marker.remove();
+           }
+           for (Route route : routes){
+               String adress = route.endAddress.substring(0, route.endAddress.indexOf(",", 2));
+               destinationMarkers.add(mMap.addMarker(new MarkerOptions()
+                       .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
+                       .title(adress + "  " + route.distance.text + "  " + route.duration.text)
+                       .position(route.endLocation)));
+               Log.e("success_location","duration:"+route.duration.text+",distance:"+route.distance.text);
+           }
+       }
     }
 
     @Override
@@ -487,7 +523,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
             else {
-                sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), latLng, 0,0);
+                sendRequest(new LatLng(first_location.getLatitude(), first_location.getLongitude()), latLng, 0,0,0);
                 layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 100);
                 layoutParams.setMargins(250, 0, 250, 0);
                 layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -514,7 +550,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 location1 = new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude());
                 text1="Vị trí của tôi";
                 f1.setText("Vị trí của tôi");
-                Toast.makeText(this, "This is my location", Toast.LENGTH_SHORT).show();
             }
         }
         return false;
@@ -526,6 +561,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         SharedPreferences.Editor editor=getSharedPreferences("location",MODE_PRIVATE).edit();
         editor.clear();
         if(is_check_show){
+            is_default_postion=true;
             database.query_excute(QueryData.SAVELOCATION(location2.latitude,location2.longitude,1));
             editor.putString("latitute",location2.latitude+"");
             editor.putString("longitute",location2.longitude+"");

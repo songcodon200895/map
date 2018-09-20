@@ -38,16 +38,17 @@ public class DirectionFinder {
     private DirectionFinderListener listener;
     private LatLng origin;
     private LatLng destination;
-    private int REQUEST_CODE1,REQUEST_CODE2;
-    public DirectionFinder(DirectionFinderListener listener, LatLng origin, LatLng destination,int requsetcode1,int requsetcode2) {
+    private int REQUEST_CODE1,REQUEST_CODE2,REQUEST_CODE3;
+    public DirectionFinder(DirectionFinderListener listener, LatLng origin, LatLng destination,int requsetcode1,int requsetcode2,int request_duration_distance) {
         this.listener = listener;
         this.origin = origin;
         this.destination = destination;
         this.REQUEST_CODE1=requsetcode1;
         this.REQUEST_CODE2=requsetcode2;
+        this.REQUEST_CODE3=request_duration_distance;
     }
     public void execute(){
-        listener.onDirectionFinderStart(REQUEST_CODE2);
+        listener.onDirectionFinderStart(REQUEST_CODE2,REQUEST_CODE3);
         new DownloadRawData().execute(createUrl());
     }
     private String createUrl() {
@@ -127,8 +128,12 @@ public class DirectionFinder {
             route.points = decodePolyLine(overview_polylineJson.getString("points"));
             routes.add(route);
         }
-        listener.onDirectionFinderSuccess(routes,REQUEST_CODE1,REQUEST_CODE2);
-
+        if(REQUEST_CODE3==1){
+            listener.onDistanceDurationSuccess(routes,REQUEST_CODE3);
+        }
+        else {
+            listener.onDirectionFinderSuccess(routes,REQUEST_CODE1,REQUEST_CODE2);
+        }
     }
 
 
